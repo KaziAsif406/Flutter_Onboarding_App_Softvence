@@ -7,6 +7,7 @@ import '../../location/models/location_model.dart';
 import '../../location/services/location_service.dart';
 import '../models/alarm_model.dart';
 import '../services/alarm_service.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final LocationModel? selectedLocation;
@@ -341,6 +342,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           onPressed: widget.onBackPressed,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.notifications_active_rounded,
+              color: AppColors.primaryPurple,
+            ),
+            tooltip: 'Test Notification',
+            onPressed: () {
+              debugPrint('HomeScreen: Test notification button pressed');
+              NotificationService.testNotification();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Testing notifications... Check logs!'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

@@ -25,14 +25,26 @@ class _SplashScreenState extends State<SplashScreen> {
         'SplashScreen: Checking first launch and requesting permissions...',
       );
 
-      // Request notification permission with dialog
-      if (mounted) {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Check if notification permission has already been requested
+      final notificationPermissionAsked =
+          prefs.getBool('notificationPermissionAsked') ?? false;
+
+      debugPrint(
+        'SplashScreen: notificationPermissionAsked = $notificationPermissionAsked',
+      );
+
+      // Only show notification permission dialog if not asked before
+      if (!notificationPermissionAsked && mounted) {
         debugPrint('SplashScreen: Showing notification permission dialog');
         await _requestNotificationPermission();
         debugPrint('SplashScreen: Permission dialog dismissed');
+
+        // Mark that we've asked for notification permission
+        await prefs.setBool('notificationPermissionAsked', true);
       }
 
-      final prefs = await SharedPreferences.getInstance();
       final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
 
       debugPrint('SplashScreen: isFirstLaunch = $isFirstLaunch');

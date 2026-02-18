@@ -137,7 +137,7 @@ class NotificationService {
       // Ensure alarm time is in the future
       final now = DateTime.now();
       final timeDifference = alarmDateTime.difference(now);
-      final minutesUntilAlarm = timeDifference.inMinutes;
+      final secondsUntilAlarm = timeDifference.inSeconds;
 
       debugPrint('  Current Time: $now');
       debugPrint(
@@ -151,14 +151,41 @@ class NotificationService {
         throw Exception(error);
       }
 
-      if (minutesUntilAlarm < 1) {
+      final notificationId = _getNotificationId(alarmId);
+
+      // WORKAROUND: For alarms less than 2 minutes away, inexact alarms won't work reliably
+      // Instead, schedule the notification to show at the exact time using Future.delayed
+      if (secondsUntilAlarm < 120) {
         debugPrint(
-          '⚠️  WARNING: Alarm is less than 1 minute away, may not fire reliably',
+          '⚠️  Alarm is less than 2 minutes away ($secondsUntilAlarm seconds)',
         );
+        debugPrint(
+          'NotificationService: Using immediate delay notification (fallback for near-future alarms)',
+        );
+
+        // Schedule notification to show at the exact time using a delay
+        Future.delayed(Duration(seconds: secondsUntilAlarm), () async {
+          debugPrint(
+            'NotificationService: ⏰ Showing immediate alarm notification for "$alarmLabel"',
+          );
+          try {
+            await showInstantNotification(
+              title: 'Alarm: $alarmLabel',
+              body: 'Time to wake up!',
+            );
+            debugPrint(
+              'NotificationService: ✅ Immediate alarm notification shown - ID=$notificationId',
+            );
+          } catch (e) {
+            debugPrint(
+              'NotificationService: ❌ Error showing immediate notification: $e',
+            );
+          }
+        });
+        return;
       }
 
       final tzDateTime = tz.TZDateTime.from(alarmDateTime, tz.local);
-      final notificationId = _getNotificationId(alarmId);
 
       debugPrint('NotificationService: Converted to TZ DateTime: $tzDateTime');
       debugPrint('NotificationService: Notification ID: $notificationId');
@@ -205,6 +232,9 @@ class NotificationService {
           debugPrint(
             'NotificationService: ⚠️  Exact alarms not permitted, falling back to inexact alarms',
           );
+          debugPrint(
+            'NotificationService: ℹ️  To enable exact alarms: Settings → Apps → [Your App] → Alarms & reminders → Allow setting alarms and reminders',
+          );
 
           await _notificationsPlugin.zonedSchedule(
             notificationId,
@@ -236,6 +266,9 @@ class NotificationService {
 
           debugPrint(
             'NotificationService: ✅ Alarm notification scheduled (INEXACT) - ID=$notificationId, Time=$alarmDateTime',
+          );
+          debugPrint(
+            'NotificationService: ⚠️  NOTE: Inexact alarms may have ±10-15 minute variance and may not work if device is in deep sleep',
           );
         } else {
           debugPrint('NotificationService: ❌ Error scheduling alarm: $e');
@@ -315,13 +348,40 @@ class NotificationService {
     }
   }
 
-  /// Test if notifications are working (shows notification after 5 seconds)
+  /// Test if notifications are working (shows immediately)
   static Future<void> testNotification() async {
-    debugPrint('NotificationService: Testing notification system...');
-    await Future.delayed(const Duration(seconds: 5));
-    await showInstantNotification(
-      title: 'Test Alarm',
-      body: 'If you see this, notifications are working!',
-    );
+    debugPrint('NotificationService: ========================================');
+    debugPrint('NotificationService: TESTING NOTIFICATION SYSTEM');
+    debugPrint('NotificationService: ========================================');
+
+    try {
+      // Check Android notification settings
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      debugPrint(
+        'NotificationService: Android plugin available: ${androidPlugin != null}',
+      );
+
+      // Show test notification immediately
+      debugPrint('NotificationService: Showing test notification NOW...');
+
+      await showInstantNotification(
+        title: 'Test Alarm 🔔',
+        body: 'If you see this, notifications ARE working!',
+      );
+
+      debugPrint('NotificationService: Test notification method completed');
+      debugPrint(
+        'NotificationService: ========================================',
+      );
+    } catch (e) {
+      debugPrint('NotificationService: ❌ Test failed: $e');
+      debugPrint(
+        'NotificationService: ========================================',
+      );
+    }
   }
 }
