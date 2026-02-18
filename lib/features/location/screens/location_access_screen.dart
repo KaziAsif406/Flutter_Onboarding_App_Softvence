@@ -5,7 +5,7 @@ import '../models/location_model.dart';
 import '../services/location_service.dart';
 
 class LocationAccessScreen extends StatefulWidget {
-  final VoidCallback onLocationAccessComplete;
+  final Function(LocationModel?) onLocationAccessComplete;
 
   const LocationAccessScreen({
     super.key,
@@ -80,7 +80,7 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
 
   void _continueToNext() {
     if (_currentLocation != null) {
-      widget.onLocationAccessComplete();
+      widget.onLocationAccessComplete(_currentLocation);
     }
   }
 
@@ -267,7 +267,7 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
               // Skip for now button
               if (_currentLocation == null)
                 TextButton(
-                  onPressed: widget.onLocationAccessComplete,
+                  onPressed: () => widget.onLocationAccessComplete(null),
                   child: const Text(
                     'Skip for now',
                     style: TextStyle(

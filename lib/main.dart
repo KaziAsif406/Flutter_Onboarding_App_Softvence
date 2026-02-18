@@ -47,9 +47,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     });
   }
 
-  void _handleLocationAccessComplete() {
+  void _handleLocationAccessComplete(LocationModel? location) {
     setState(() {
       _locationAccessComplete = true;
+      _selectedLocation = location;
     });
   }
 
