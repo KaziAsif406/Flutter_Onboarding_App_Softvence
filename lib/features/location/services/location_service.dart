@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../models/location_model.dart';
 
 class LocationService {
@@ -29,12 +30,56 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      // Get address from coordinates
+      String? address = await _getAddressFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
       return LocationModel(
         latitude: position.latitude,
         longitude: position.longitude,
+        address: address,
       );
     } catch (e) {
       throw Exception('Failed to get location: $e');
+    }
+  }
+
+  /// Get address from latitude and longitude
+  static Future<String?> _getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(latitude, longitude);
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+
+        // Build a readable address
+        final parts = <String>[];
+
+        if (place.locality != null && place.locality!.isNotEmpty) {
+          parts.add(place.locality!);
+        }
+        if (place.administrativeArea != null &&
+            place.administrativeArea!.isNotEmpty) {
+          parts.add(place.administrativeArea!);
+        }
+        if (place.country != null && place.country!.isNotEmpty) {
+          parts.add(place.country!);
+        }
+
+        if (parts.isNotEmpty) {
+          return parts.join(', ');
+        }
+      }
+
+      return null;
+    } catch (e) {
+      // Silently fail and return null if reverse geocoding fails
+      return null;
     }
   }
 

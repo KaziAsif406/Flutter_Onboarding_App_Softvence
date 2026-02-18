@@ -37,6 +37,7 @@ dependencies:
 
   # Location services
   geolocator: ^9.0.2
+  geocoding: ^2.1.1
 
 dev_dependencies:
   flutter_test:
