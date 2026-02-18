@@ -5,10 +5,9 @@ class AppStrings {
       "Start your day aligned with the sun and your surroundings. Let your routine flow naturally.";
 
   // Onboarding Screen 2
-  static const String onboarding2Title =
-      "Explore new horizons, one step at a time.";
+  static const String onboarding2Title = "Automatic & Effortless Sync";
   static const String onboarding2Description =
-      "Every trip holds a story waiting to be lived. Let us guide you to experiences that inspire, connect, and last a lifetime.";
+      "Using your location, we automatically adjust your alarms to match your environment.";
 
   // Onboarding Screen 3
   static const String onboarding3Title =

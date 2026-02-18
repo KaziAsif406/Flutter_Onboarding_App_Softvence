@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import '../../../constants/index.dart';
 import '../../../commmon_widgets/index.dart';
 
-class OnboardingScreen1 extends StatelessWidget {
+class OnboardingScreen2 extends StatelessWidget {
   final VoidCallback onNextPressed;
   final VoidCallback onSkipPressed;
   final String backgroundImage;
 
-  const OnboardingScreen1({
+  const OnboardingScreen2({
     super.key,
     required this.onNextPressed,
     required this.onSkipPressed,
-    this.backgroundImage = 'assets/images/onboarding1.jpg',
+    this.backgroundImage = 'assets/images/onboarding2.jpg',
   });
 
   @override
@@ -40,7 +40,6 @@ class OnboardingScreen1 extends StatelessWidget {
                   backgroundImage,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    // Fallback gradient if image not found
                     return Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -48,7 +47,7 @@ class OnboardingScreen1 extends StatelessWidget {
                           end: Alignment.bottomRight,
                           colors: [
                             AppColors.primaryDark,
-                            const Color(0xFF1E3A8A),
+                            const Color(0xFF164E63),
                           ],
                         ),
                       ),
@@ -59,7 +58,7 @@ class OnboardingScreen1 extends StatelessWidget {
 
               // Skip Button (Overlay)
               Positioned(
-                top: AppDimensions.paddingMedium + 50,
+                top: AppDimensions.paddingMedium + 8,
                 right: AppDimensions.paddingLarge,
                 child: GestureDetector(
                   onTap: onSkipPressed,
@@ -88,7 +87,7 @@ class OnboardingScreen1 extends StatelessWidget {
                   children: [
                     // Title
                     Text(
-                      AppStrings.onboarding1Title,
+                      AppStrings.onboarding2Title,
                       style: TextStyle(
                         fontSize: isMobile
                             ? AppDimensions.fontSizeXXLarge
@@ -103,7 +102,7 @@ class OnboardingScreen1 extends StatelessWidget {
 
                     // Description
                     Text(
-                      AppStrings.onboarding1Description,
+                      AppStrings.onboarding2Description,
                       style: TextStyle(
                         fontSize: AppDimensions.fontSizeLarge,
                         fontWeight: FontWeight.w400,
@@ -115,7 +114,7 @@ class OnboardingScreen1 extends StatelessWidget {
                     SizedBox(height: AppDimensions.paddingXLarge),
 
                     // Page Indicator
-                    PageIndicator(currentPage: 0, totalPages: 3),
+                    PageIndicator(currentPage: 1, totalPages: 3),
 
                     SizedBox(height: AppDimensions.paddingLarge),
 
