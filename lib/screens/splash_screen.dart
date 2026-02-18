@@ -21,33 +21,21 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
 
     try {
-      debugPrint(
-        'SplashScreen: Checking first launch and requesting permissions...',
-      );
-
       final prefs = await SharedPreferences.getInstance();
 
       // Check if notification permission has already been requested
       final notificationPermissionAsked =
           prefs.getBool('notificationPermissionAsked') ?? false;
 
-      debugPrint(
-        'SplashScreen: notificationPermissionAsked = $notificationPermissionAsked',
-      );
-
       // Only show notification permission dialog if not asked before
       if (!notificationPermissionAsked && mounted) {
-        debugPrint('SplashScreen: Showing notification permission dialog');
         await _requestNotificationPermission();
-        debugPrint('SplashScreen: Permission dialog dismissed');
 
         // Mark that we've asked for notification permission
         await prefs.setBool('notificationPermissionAsked', true);
       }
 
       final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
-
-      debugPrint('SplashScreen: isFirstLaunch = $isFirstLaunch');
 
       if (mounted) {
         Navigator.of(
@@ -66,8 +54,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _requestNotificationPermission() async {
     if (!mounted) return;
-
-    debugPrint('SplashScreen: Building notification permission dialog');
 
     await showDialog<void>(
       context: context,
@@ -96,7 +82,6 @@ class _SplashScreenState extends State<SplashScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                debugPrint('SplashScreen: User tapped Skip');
                 Navigator.of(dialogContext).pop();
               },
               child: const Text(
@@ -106,17 +91,10 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                debugPrint(
-                  'SplashScreen: User tapped Allow - requesting permissions',
-                );
                 try {
-                  final result =
-                      await NotificationService.requestNotificationPermission();
-                  debugPrint(
-                    'SplashScreen: Permission request result = $result',
-                  );
+                  await NotificationService.requestNotificationPermission();
                 } catch (e) {
-                  debugPrint('SplashScreen: Permission request error = $e');
+                  debugPrint('Error requesting permissions: $e');
                 }
                 if (dialogContext.mounted) {
                   Navigator.of(dialogContext).pop();
