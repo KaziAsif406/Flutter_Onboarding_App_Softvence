@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../screens/index.dart';
+import '../../../constants/index.dart';
+import '../../../commmon_widgets/index.dart';
+import 'onboarding_screen_content.dart';
 
 class OnboardingFlowScreen extends StatefulWidget {
   final VoidCallback onOnboardingComplete;
@@ -10,10 +12,29 @@ class OnboardingFlowScreen extends StatefulWidget {
   State<OnboardingFlowScreen> createState() => _OnboardingFlowScreenState();
 }
 
-class _OnboardingFlowScreenState extends State<OnboardingFlowScreen>
-    with SingleTickerProviderStateMixin {
+class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   late PageController _pageController;
   int _currentPage = 0;
+
+  // Onboarding data
+  final List<({String title, String description, String image})>
+  _onboardingData = [
+    (
+      title: AppStrings.onboarding1Title,
+      description: AppStrings.onboarding1Description,
+      image: 'assets/images/onboarding1.jpg',
+    ),
+    (
+      title: AppStrings.onboarding2Title,
+      description: AppStrings.onboarding2Description,
+      image: 'assets/images/onboarding2.jpg',
+    ),
+    (
+      title: AppStrings.onboarding3Title,
+      description: AppStrings.onboarding3Description,
+      image: 'assets/images/onboarding3.jpg',
+    ),
+  ];
 
   @override
   void initState() {
@@ -28,14 +49,14 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen>
   }
 
   void _nextPage() {
-    if (_currentPage < 2) {
+    if (_currentPage < _onboardingData.length - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
-        duration: const Duration(milliseconds: 400),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else {
-      // Onboarding complete
+      // Onboarding complete - navigate to next screen
       widget.onOnboardingComplete();
     }
   }
@@ -48,28 +69,58 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (page) {
-          setState(() {
-            _currentPage = page;
-          });
-        },
+      backgroundColor: AppColors.primaryDark,
+      body: Column(
         children: [
-          OnboardingScreen1(
-            onNextPressed: _nextPage,
-            onSkipPressed: _skipOnboarding,
-            backgroundImage: 'assets/images/onboarding1.jpg',
+          // Scrollable PageView with content
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (page) {
+                setState(() {
+                  _currentPage = page;
+                });
+              },
+              itemCount: _onboardingData.length,
+              itemBuilder: (context, index) {
+                final data = _onboardingData[index];
+                return OnboardingScreenContent(
+                  title: data.title,
+                  description: data.description,
+                  backgroundImage: data.image,
+                  onSkipPressed: _skipOnboarding,
+                );
+              },
+            ),
           ),
-          OnboardingScreen2(
-            onNextPressed: _nextPage,
-            onSkipPressed: _skipOnboarding,
-            backgroundImage: 'assets/images/onboarding2.jpg',
-          ),
-          OnboardingScreen3(
-            onNextPressed: _nextPage,
-            onSkipPressed: _skipOnboarding,
-            backgroundImage: 'assets/images/onboarding3.jpg',
+
+          // Fixed bottom section with page indicator and button
+          Container(
+            color: AppColors.primaryDark,
+            padding: EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingLarge,
+              vertical: AppDimensions.paddingLarge,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Page Indicator (animated)
+                PageIndicator(
+                  currentPage: _currentPage,
+                  totalPages: _onboardingData.length,
+                ),
+
+                SizedBox(height: AppDimensions.paddingLarge),
+
+                // Next/Get Started Button
+                PrimaryButton(
+                  label: _currentPage == _onboardingData.length - 1
+                      ? AppStrings.getStarted
+                      : AppStrings.next,
+                  onPressed: _nextPage,
+                ),
+              ],
+            ),
           ),
         ],
       ),
