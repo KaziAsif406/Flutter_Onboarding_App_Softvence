@@ -39,9 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (savedLocation != null) {
         final locationJson = jsonDecode(savedLocation) as Map<String, dynamic>;
-        setState(() {
-          _currentLocation = LocationModel.fromJson(locationJson);
-        });
+        if (mounted) {
+          setState(() {
+            _currentLocation = LocationModel.fromJson(locationJson);
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error loading saved location: $e');
@@ -49,16 +51,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadAlarms() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final alarms = await AlarmService.getAllAlarms();
-      setState(() {
-        _alarms = alarms;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() {
+          _alarms = alarms;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error loading alarms: $e')));
@@ -168,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refreshLocation() async {
+    if (!mounted) return;
     setState(() => _isRefreshingLocation = true);
 
     try {
@@ -176,11 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (!hasPermission) {
         if (mounted) {
+          setState(() => _isRefreshingLocation = false);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Location permission is required')),
           );
         }
-        setState(() => _isRefreshingLocation = false);
         return;
       }
 
@@ -195,19 +201,18 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       // Update UI
-      setState(() {
-        _currentLocation = newLocation;
-        _isRefreshingLocation = false;
-      });
-
       if (mounted) {
+        setState(() {
+          _currentLocation = newLocation;
+          _isRefreshingLocation = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Location updated successfully')),
         );
       }
     } catch (e) {
-      setState(() => _isRefreshingLocation = false);
       if (mounted) {
+        setState(() => _isRefreshingLocation = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error updating location: $e')));

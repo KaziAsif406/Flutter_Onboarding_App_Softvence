@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/alarm_model.dart';
 import 'database_service.dart';
+import 'notification_service.dart';
 
 class AlarmService {
   /// Get all alarms
@@ -35,6 +36,15 @@ class AlarmService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
+      // Schedule notification
+      if (newAlarm.isEnabled) {
+        await NotificationService.scheduleAlarmNotification(
+          alarmId: newAlarm.id,
+          alarmDateTime: newAlarm.dateTime,
+          alarmLabel: newAlarm.label ?? 'Alarm',
+        );
+      }
+
       return newAlarm;
     } catch (e) {
       throw Exception('Failed to add alarm: $e');
@@ -53,6 +63,17 @@ class AlarmService {
         where: 'id = ?',
         whereArgs: [alarm.id],
       );
+
+      // Cancel existing notification and reschedule if enabled
+      await NotificationService.cancelAlarmNotification(alarm.id);
+
+      if (alarm.isEnabled) {
+        await NotificationService.scheduleAlarmNotification(
+          alarmId: alarm.id,
+          alarmDateTime: alarm.dateTime,
+          alarmLabel: alarm.label ?? 'Alarm',
+        );
+      }
     } catch (e) {
       throw Exception('Failed to update alarm: $e');
     }
@@ -70,6 +91,28 @@ class AlarmService {
         where: 'id = ?',
         whereArgs: [alarmId],
       );
+
+      // Handle notification scheduling
+      if (enabled) {
+        // Fetch alarm details to schedule notification
+        final maps = await db.query(
+          tableName,
+          where: 'id = ?',
+          whereArgs: [alarmId],
+        );
+
+        if (maps.isNotEmpty) {
+          final alarm = AlarmModel.fromMap(maps.first);
+          await NotificationService.scheduleAlarmNotification(
+            alarmId: alarmId,
+            alarmDateTime: alarm.dateTime,
+            alarmLabel: alarm.label ?? 'Alarm',
+          );
+        }
+      } else {
+        // Cancel notification if alarm is disabled
+        await NotificationService.cancelAlarmNotification(alarmId);
+      }
     } catch (e) {
       throw Exception('Failed to toggle alarm: $e');
     }
@@ -82,6 +125,9 @@ class AlarmService {
       final tableName = DatabaseService.getAlarmsTable();
 
       await db.delete(tableName, where: 'id = ?', whereArgs: [alarmId]);
+
+      // Cancel notification
+      await NotificationService.cancelAlarmNotification(alarmId);
     } catch (e) {
       throw Exception('Failed to delete alarm: $e');
     }
@@ -94,6 +140,9 @@ class AlarmService {
       final tableName = DatabaseService.getAlarmsTable();
 
       await db.delete(tableName);
+
+      // Cancel all notifications
+      await NotificationService.cancelAllNotifications();
     } catch (e) {
       throw Exception('Failed to clear alarms: $e');
     }

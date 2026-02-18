@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/index.dart';
+import '../features/alarm/services/notification_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,8 +21,21 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
 
     try {
+      debugPrint(
+        'SplashScreen: Checking first launch and requesting permissions...',
+      );
+
+      // Request notification permission with dialog
+      if (mounted) {
+        debugPrint('SplashScreen: Showing notification permission dialog');
+        await _requestNotificationPermission();
+        debugPrint('SplashScreen: Permission dialog dismissed');
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+
+      debugPrint('SplashScreen: isFirstLaunch = $isFirstLaunch');
 
       if (mounted) {
         Navigator.of(
@@ -29,12 +43,82 @@ class _SplashScreenState extends State<SplashScreen> {
         ).pushReplacementNamed(isFirstLaunch ? '/onboarding' : '/home');
       }
     } catch (e) {
+      debugPrint('SplashScreen Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    if (!mounted) return;
+
+    debugPrint('SplashScreen: Building notification permission dialog');
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.primaryDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              AppDimensions.borderRadiusLarge,
+            ),
+          ),
+          title: Text(
+            'Enable Notifications',
+            style: Theme.of(dialogContext).textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'We need notification permissions to alert you when your alarms go off.',
+            style: Theme.of(
+              dialogContext,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                debugPrint('SplashScreen: User tapped Skip');
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text(
+                'Skip',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                debugPrint(
+                  'SplashScreen: User tapped Allow - requesting permissions',
+                );
+                try {
+                  final result =
+                      await NotificationService.requestNotificationPermission();
+                  debugPrint(
+                    'SplashScreen: Permission request result = $result',
+                  );
+                } catch (e) {
+                  debugPrint('SplashScreen: Permission request error = $e');
+                }
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+              ),
+              child: const Text('Allow'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

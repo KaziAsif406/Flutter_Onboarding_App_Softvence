@@ -31,12 +31,16 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
 
   Future<void> _checkLocationServiceEnabled() async {
     final enabled = await LocationService.isLocationServiceEnabled();
-    setState(() {
-      _isLocationServiceEnabled = enabled;
-    });
+    if (mounted) {
+      setState(() {
+        _isLocationServiceEnabled = enabled;
+      });
+    }
   }
 
   Future<void> _requestLocationPermission() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -45,10 +49,12 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
     try {
       // Check if location service is enabled
       if (!_isLocationServiceEnabled) {
-        setState(() {
-          _errorMessage = 'Location service is disabled. Please enable it.';
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Location service is disabled. Please enable it.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -56,11 +62,13 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
       final hasPermission = await LocationService.requestLocationPermission();
 
       if (!hasPermission) {
-        setState(() {
-          _errorMessage =
-              'Location permission is required to use this feature.';
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage =
+                'Location permission is required to use this feature.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -72,19 +80,20 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
       await prefs.setString('selectedLocation', jsonEncode(location.toJson()));
       await prefs.setBool('locationPermissionGranted', true);
 
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Navigate to next screen with location
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // Navigate to next screen with location
         widget.onLocationAccessComplete(location);
       }
     } on Exception catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _isLoading = false;
+        });
+      }
     }
   }
 

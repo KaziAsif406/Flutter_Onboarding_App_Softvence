@@ -11,6 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPreferences.getInstance();
   await DatabaseService.getDatabase();
+  await NotificationService.initialize();
   runApp(const MyApp());
 }
 
