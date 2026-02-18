@@ -10,6 +10,7 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPreferences.getInstance();
+  await DatabaseService.getDatabase();
   runApp(const MyApp());
 }
 

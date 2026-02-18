@@ -41,4 +41,20 @@ class AlarmModel {
     isEnabled: json['isEnabled'] as bool? ?? true,
     label: json['label'] as String?,
   );
+
+  // Convert to database map
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'dateTime': dateTime.toIso8601String(),
+    'isEnabled': isEnabled ? 1 : 0,
+    'label': label,
+  };
+
+  // Create from database map
+  factory AlarmModel.fromMap(Map<String, dynamic> map) => AlarmModel(
+    id: map['id'] as String,
+    dateTime: DateTime.parse(map['dateTime'] as String),
+    isEnabled: (map['isEnabled'] as int?) == 1,
+    label: map['label'] as String?,
+  );
 }

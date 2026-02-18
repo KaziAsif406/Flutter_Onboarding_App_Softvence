@@ -1,23 +1,17 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 import '../models/alarm_model.dart';
+import 'database_service.dart';
 
 class AlarmService {
-  static const String _alarmsKey = 'alarms_list';
-
   /// Get all alarms
   static Future<List<AlarmModel>> getAllAlarms() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final alarmsJson = prefs.getStringList(_alarmsKey) ?? [];
+      final db = await DatabaseService.getDatabase();
+      final tableName = DatabaseService.getAlarmsTable();
 
-      return alarmsJson
-          .map(
-            (json) =>
-                AlarmModel.fromJson(jsonDecode(json) as Map<String, dynamic>),
-          )
-          .toList()
-        ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      final maps = await db.query(tableName, orderBy: 'dateTime ASC');
+
+      return List.generate(maps.length, (i) => AlarmModel.fromMap(maps[i]));
     } catch (e) {
       throw Exception('Failed to get alarms: $e');
     }
@@ -26,8 +20,8 @@ class AlarmService {
   /// Add a new alarm
   static Future<AlarmModel> addAlarm(DateTime dateTime, {String? label}) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final alarmsJson = prefs.getStringList(_alarmsKey) ?? [];
+      final db = await DatabaseService.getDatabase();
+      final tableName = DatabaseService.getAlarmsTable();
 
       final newAlarm = AlarmModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -35,8 +29,11 @@ class AlarmService {
         label: label,
       );
 
-      alarmsJson.add(jsonEncode(newAlarm.toJson()));
-      await prefs.setStringList(_alarmsKey, alarmsJson);
+      await db.insert(
+        tableName,
+        newAlarm.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
 
       return newAlarm;
     } catch (e) {
@@ -47,20 +44,15 @@ class AlarmService {
   /// Update alarm
   static Future<void> updateAlarm(AlarmModel alarm) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final alarmsJson = prefs.getStringList(_alarmsKey) ?? [];
+      final db = await DatabaseService.getDatabase();
+      final tableName = DatabaseService.getAlarmsTable();
 
-      final index = alarmsJson.indexWhere((json) {
-        final alarm = AlarmModel.fromJson(
-          jsonDecode(json) as Map<String, dynamic>,
-        );
-        return alarm.id == alarm.id;
-      });
-
-      if (index != -1) {
-        alarmsJson[index] = jsonEncode(alarm.toJson());
-        await prefs.setStringList(_alarmsKey, alarmsJson);
-      }
+      await db.update(
+        tableName,
+        alarm.toMap(),
+        where: 'id = ?',
+        whereArgs: [alarm.id],
+      );
     } catch (e) {
       throw Exception('Failed to update alarm: $e');
     }
@@ -69,24 +61,15 @@ class AlarmService {
   /// Toggle alarm enabled status
   static Future<void> toggleAlarm(String alarmId, bool enabled) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final alarmsJson = prefs.getStringList(_alarmsKey) ?? [];
+      final db = await DatabaseService.getDatabase();
+      final tableName = DatabaseService.getAlarmsTable();
 
-      final index = alarmsJson.indexWhere((json) {
-        final alarm = AlarmModel.fromJson(
-          jsonDecode(json) as Map<String, dynamic>,
-        );
-        return alarm.id == alarmId;
-      });
-
-      if (index != -1) {
-        final alarm = AlarmModel.fromJson(
-          jsonDecode(alarmsJson[index]) as Map<String, dynamic>,
-        );
-        final updatedAlarm = alarm.copyWith(isEnabled: enabled);
-        alarmsJson[index] = jsonEncode(updatedAlarm.toJson());
-        await prefs.setStringList(_alarmsKey, alarmsJson);
-      }
+      await db.update(
+        tableName,
+        {'isEnabled': enabled ? 1 : 0},
+        where: 'id = ?',
+        whereArgs: [alarmId],
+      );
     } catch (e) {
       throw Exception('Failed to toggle alarm: $e');
     }
@@ -95,17 +78,10 @@ class AlarmService {
   /// Delete alarm
   static Future<void> deleteAlarm(String alarmId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final alarmsJson = prefs.getStringList(_alarmsKey) ?? [];
+      final db = await DatabaseService.getDatabase();
+      final tableName = DatabaseService.getAlarmsTable();
 
-      alarmsJson.removeWhere((json) {
-        final alarm = AlarmModel.fromJson(
-          jsonDecode(json) as Map<String, dynamic>,
-        );
-        return alarm.id == alarmId;
-      });
-
-      await prefs.setStringList(_alarmsKey, alarmsJson);
+      await db.delete(tableName, where: 'id = ?', whereArgs: [alarmId]);
     } catch (e) {
       throw Exception('Failed to delete alarm: $e');
     }
@@ -114,8 +90,10 @@ class AlarmService {
   /// Clear all alarms
   static Future<void> clearAllAlarms() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_alarmsKey);
+      final db = await DatabaseService.getDatabase();
+      final tableName = DatabaseService.getAlarmsTable();
+
+      await db.delete(tableName);
     } catch (e) {
       throw Exception('Failed to clear alarms: $e');
     }
