@@ -143,15 +143,118 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showDeleteConfirmation(String alarmId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColors.primaryDarkSecondary,
+          title: const Text(
+            'Delete Alarm',
+            style: TextStyle(color: AppColors.textWhite),
+          ),
+          content: const Text(
+            'Are you sure you want to delete this alarm?',
+            style: TextStyle(color: AppColors.textGrey),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.textGreySecondary),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteAlarm(alarmId);
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Color(0xFFDC2626)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editAlarm(AlarmModel alarm) {
+    // TODO: Implement edit alarm mode
+    // For now, show a simple dialog to edit the alarm time
+    final now = DateTime.now();
+
+    showDatePicker(
+      context: context,
+      initialDate: alarm.dateTime,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primaryPurple,
+              surface: AppColors.primaryDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    ).then((pickedDate) async {
+      if (pickedDate == null) return;
+
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(alarm.dateTime),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: AppColors.primaryPurple,
+                surface: AppColors.primaryDark,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime == null) return;
+
+      final updatedDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+
+      try {
+        final updatedAlarm = alarm.copyWith(dateTime: updatedDateTime);
+        await AlarmService.updateAlarm(updatedAlarm);
+        await _loadAlarms();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Alarm updated successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error updating alarm: $e')));
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
-      appBar: AppBar(
-        title: const Text('Home'),
-        backgroundColor: AppColors.primaryDark,
-        elevation: 0,
-      ),
+      appBar: AppBar(backgroundColor: AppColors.primaryDark, elevation: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(AppDimensions.paddingLarge),
@@ -257,63 +360,58 @@ class _HomeScreenState extends State<HomeScreen> {
                     final timeFormat = DateFormat('h:mm a');
                     final dateFormat = DateFormat('EEE d MMM yyyy');
 
-                    return Container(
-                      margin: EdgeInsets.only(
-                        bottom: AppDimensions.paddingLarge,
-                      ),
-                      padding: EdgeInsets.all(AppDimensions.paddingMedium),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryDarkSecondary,
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.borderRadiusLarge,
+                    return GestureDetector(
+                      onTap: () => _editAlarm(alarm),
+                      onLongPress: () => _showDeleteConfirmation(alarm.id),
+                      child: Container(
+                        margin: EdgeInsets.only(
+                          bottom: AppDimensions.paddingLarge,
                         ),
-                        border: Border.all(
-                          color: AppColors.primaryPurple.withOpacity(0.2),
+                        padding: EdgeInsets.all(AppDimensions.paddingMedium),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryDarkSecondary,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.borderRadiusLarge,
+                          ),
+                          border: Border.all(
+                            color: AppColors.primaryPurple.withOpacity(0.2),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  timeFormat.format(alarm.dateTime),
-                                  style: const TextStyle(
-                                    fontSize: AppDimensions.fontSizeXLarge,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textWhite,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    timeFormat.format(alarm.dateTime),
+                                    style: const TextStyle(
+                                      fontSize: AppDimensions.fontSizeXLarge,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textWhite,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(height: AppDimensions.paddingSmall),
-                                Text(
-                                  dateFormat.format(alarm.dateTime),
-                                  style: const TextStyle(
-                                    fontSize: AppDimensions.fontSizeMedium,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.textGrey,
+                                  SizedBox(height: AppDimensions.paddingSmall),
+                                  Text(
+                                    dateFormat.format(alarm.dateTime),
+                                    style: const TextStyle(
+                                      fontSize: AppDimensions.fontSizeMedium,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.textGrey,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          SizedBox(width: AppDimensions.paddingMedium),
-                          Switch(
-                            value: alarm.isEnabled,
-                            onChanged: (_) => _toggleAlarm(alarm),
-                            activeColor: AppColors.primaryPurple,
-                            inactiveThumbColor: AppColors.indicatorInactive,
-                          ),
-                          SizedBox(width: AppDimensions.paddingSmall),
-                          GestureDetector(
-                            onTap: () => _deleteAlarm(alarm.id),
-                            child: const Icon(
-                              Icons.close_rounded,
-                              color: AppColors.textGreySecondary,
-                              size: 20,
+                            SizedBox(width: AppDimensions.paddingMedium),
+                            Switch(
+                              value: alarm.isEnabled,
+                              onChanged: (_) => _toggleAlarm(alarm),
+                              activeColor: AppColors.primaryPurple,
+                              inactiveThumbColor: AppColors.indicatorInactive,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   }).toList(),
