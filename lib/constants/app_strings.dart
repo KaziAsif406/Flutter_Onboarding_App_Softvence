@@ -1,0 +1,36 @@
+class AppStrings {
+  // Onboarding Screen 1
+  static const String onboarding1Title = "Wake with Nature's Rhythm";
+  static const String onboarding1Description =
+      "Start your day aligned with the sun and your surroundings. Let your routine flow naturally.";
+
+  // Onboarding Screen 2
+  static const String onboarding2Title =
+      "Explore new horizons, one step at a time.";
+  static const String onboarding2Description =
+      "Every trip holds a story waiting to be lived. Let us guide you to experiences that inspire, connect, and last a lifetime.";
+
+  // Onboarding Screen 3
+  static const String onboarding3Title =
+      "See the beauty, one journey at a time.";
+  static const String onboarding3Description =
+      "Travel made simple and exciting—discover places you'll love and moments you'll never forget.";
+
+  // Button Labels
+  static const String skip = "Skip";
+  static const String next = "Next";
+  static const String getStarted = "Get Started";
+
+  // Location Screen
+  static const String requestLocation = "Share Your Location";
+  static const String selectedLocation = "Selected Location";
+  static const String allowLocation = "Allow Location";
+
+  // Alarm Screen
+  static const String setAlarm = "Set Alarm";
+  static const String addAlarm = "Add Alarm";
+  static const String time = "Time";
+  static const String date = "Date";
+  static const String upcomingAlarms = "Upcoming Alarms";
+  static const String noAlarms = "No alarms set yet";
+}
