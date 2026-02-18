@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'constants/index.dart';
 import 'features/onboarding/index.dart';
+import 'features/location/index.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,10 +37,17 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   bool _onboardingComplete = false;
+  bool _locationAccessComplete = false;
 
   void _handleOnboardingComplete() {
     setState(() {
       _onboardingComplete = true;
+    });
+  }
+
+  void _handleLocationAccessComplete() {
+    setState(() {
+      _locationAccessComplete = true;
     });
   }
 
@@ -51,9 +59,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
       );
     }
 
+    if (!_locationAccessComplete) {
+      return LocationAccessScreen(
+        onLocationAccessComplete: _handleLocationAccessComplete,
+      );
+    }
+
+    // TODO: Implement home screen after location access
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(child: Text('Onboarding Complete!')),
+      appBar: AppBar(title: const Text('Home'), elevation: 0),
+      body: const Center(child: Text('App Setup Complete!')),
     );
   }
 }
