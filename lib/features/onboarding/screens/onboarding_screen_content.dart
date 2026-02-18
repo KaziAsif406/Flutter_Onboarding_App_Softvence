@@ -3,6 +3,7 @@ import '../../../constants/index.dart';
 
 /// Reusable onboarding screen content that displays image, title, and description.
 /// This widget is meant to be used inside a PageView.
+/// The page indicator and button are managed by the parent (OnboardingFlowScreen).
 class OnboardingScreenContent extends StatelessWidget {
   final String title;
   final String description;
@@ -19,20 +20,26 @@ class OnboardingScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final imageHeight = screenHeight * 0.48; // 48% of screen height
 
-    return Container(
-      color: AppColors.primaryDark,
-      child: Column(
+    return Scaffold(
+      backgroundColor: AppColors.primaryDark,
+      body: Column(
         children: [
-          // Image Section
-          Expanded(
-            flex: 6,
-            child: Stack(
-              children: [
-                // Background Image with Gradient Overlay
-                Container(
-                  width: double.infinity,
+          // Image Section with Rounded Bottom Corners
+          Stack(
+            children: [
+              // Image with ClipRRect for rounded corners
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+                child: Container(
+                  height: imageHeight,
+                  width: screenWidth,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -59,33 +66,36 @@ class OnboardingScreenContent extends StatelessWidget {
                     },
                   ),
                 ),
+              ),
 
-                // Skip Button (Top Right)
-                Positioned(
-                  top: AppDimensions.paddingMedium + 50,
-                  right: AppDimensions.paddingLarge,
-                  child: GestureDetector(
-                    onTap: onSkipPressed,
-                    child: const Text(
-                      AppStrings.skip,
-                      style: TextStyle(
-                        fontSize: AppDimensions.fontSizeLarge,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textWhite,
-                      ),
+              // Skip Button (Top Right)
+              Positioned(
+                top: AppDimensions.paddingLarge + 50,
+                right: AppDimensions.paddingLarge,
+                child: GestureDetector(
+                  onTap: onSkipPressed,
+                  child: const Text(
+                    AppStrings.skip,
+                    style: TextStyle(
+                      fontSize: AppDimensions.fontSizeLarge,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textWhite,
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
-          // Content Section (Title + Description)
+          // Content Section - Title & Description
           Expanded(
-            flex: 4,
             child: Container(
               color: AppColors.primaryDark,
-              padding: EdgeInsets.all(AppDimensions.paddingLarge),
+              padding: EdgeInsets.only(
+                left: AppDimensions.paddingLarge,
+                right: AppDimensions.paddingLarge,
+                top: AppDimensions.paddingXLarge,
+              ),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -94,26 +104,24 @@ class OnboardingScreenContent extends StatelessWidget {
                     // Title
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: isMobile
-                            ? AppDimensions.fontSizeXXLarge
-                            : AppDimensions.fontSizeXXXLarge,
+                      style: const TextStyle(
+                        fontSize: AppDimensions.fontSizeXXXLarge,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textWhite,
-                        height: AppDimensions.lineHeightLarge,
+                        height: 1.3,
                       ),
                     ),
 
-                    SizedBox(height: AppDimensions.paddingLarge),
+                    SizedBox(height: AppDimensions.paddingMedium),
 
                     // Description
                     Text(
                       description,
-                      style: TextStyle(
-                        fontSize: AppDimensions.fontSizeLarge,
+                      style: const TextStyle(
+                        fontSize: AppDimensions.fontSizeMedium,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textGrey,
-                        height: AppDimensions.lineHeightLarge,
+                        color: Color(0xB3FFFFFF), // White with 70% opacity
+                        height: 1.6,
                       ),
                     ),
                   ],

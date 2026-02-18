@@ -19,7 +19,6 @@ class LocationAccessScreen extends StatefulWidget {
 }
 
 class _LocationAccessScreenState extends State<LocationAccessScreen> {
-  LocationModel? _currentLocation;
   bool _isLoading = false;
   bool _isLocationServiceEnabled = false;
   String? _errorMessage;
@@ -74,9 +73,13 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
       await prefs.setBool('locationPermissionGranted', true);
 
       setState(() {
-        _currentLocation = location;
         _isLoading = false;
       });
+
+      // Navigate to next screen with location
+      if (mounted) {
+        widget.onLocationAccessComplete(location);
+      }
     } on Exception catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -85,16 +88,8 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
     }
   }
 
-  void _continueToNext() {
-    if (_currentLocation != null) {
-      widget.onLocationAccessComplete(_currentLocation);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
       appBar: AppBar(
@@ -102,190 +97,193 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
         elevation: 0,
         leading: null,
         automaticallyImplyLeading: false,
+        title: const Text(
+          'Location',
+          style: TextStyle(
+            fontSize: AppDimensions.fontSizeLarge,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textGreySecondary,
+          ),
+        ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(AppDimensions.paddingLarge),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Icon or illustration
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withOpacity(0.2),
-                  shape: BoxShape.circle,
+        child: Column(
+          children: [
+            // Main Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingLarge,
+                  vertical: AppDimensions.paddingMedium,
                 ),
-                child: const Icon(
-                  Icons.location_on_rounded,
-                  size: 50,
-                  color: AppColors.primaryPurple,
-                ),
-              ),
-
-              SizedBox(height: AppDimensions.paddingXLarge),
-
-              // Title
-              Text(
-                AppStrings.requestLocation,
-                style: TextStyle(
-                  fontSize: isMobile
-                      ? AppDimensions.fontSizeXXLarge
-                      : AppDimensions.fontSizeXXXLarge,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textWhite,
-                  height: AppDimensions.lineHeightLarge,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              SizedBox(height: AppDimensions.paddingLarge),
-
-              // Description
-              Text(
-                'We need your location to automatically sync your alarms with your environment.',
-                style: TextStyle(
-                  fontSize: AppDimensions.fontSizeLarge,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textGrey,
-                  height: AppDimensions.lineHeightLarge,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              SizedBox(height: AppDimensions.paddingXLarge),
-
-              // Location Display or Loading
-              if (_currentLocation != null) ...[
-                Container(
-                  padding: EdgeInsets.all(AppDimensions.paddingLarge),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryDarkSecondary,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.borderRadiusLarge,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      'Welcome to Your Smart Nature Alarm',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textWhite,
+                        height: 1.3,
+                      ),
                     ),
-                    border: Border.all(
-                      color: AppColors.primaryPurple.withOpacity(0.3),
+
+                    SizedBox(height: AppDimensions.paddingMedium),
+
+                    // Subtitle
+                    Text(
+                      'Sync with your surroundings and let your alarms adjust to your environment automatically.',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xB3FFFFFF), // White with 70% opacity
+                        height: 1.6,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            color: AppColors.primaryPurple,
-                            size: 24,
+
+                    SizedBox(height: AppDimensions.paddingXLarge),
+
+                    // Image
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/location1.jpg',
+                        width: double.infinity,
+                        height: 300,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+
+                    SizedBox(height: AppDimensions.paddingXLarge),
+
+                    // Error Message Display
+                    if (_errorMessage != null) ...[
+                      Container(
+                        padding: EdgeInsets.all(AppDimensions.paddingMedium),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7F1D1D).withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.borderRadiusLarge,
                           ),
-                          SizedBox(width: AppDimensions.paddingMedium),
+                          border: Border.all(
+                            color: const Color(0xFFFCA5A5).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Color(0xFFDC2626),
+                              size: 24,
+                            ),
+                            SizedBox(width: AppDimensions.paddingMedium),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  fontSize: AppDimensions.fontSizeMedium,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFFDC2626),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: AppDimensions.paddingLarge),
+                    ],
+
+                    // Loading State
+                    if (_isLoading) ...[
+                      Center(
+                        child: Column(
+                          children: [
+                            const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primaryPurple,
+                              ),
+                            ),
+                            SizedBox(height: AppDimensions.paddingLarge),
+                            const Text(
+                              'Fetching your location...',
+                              style: TextStyle(
+                                fontSize: AppDimensions.fontSizeLarge,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textGrey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom Buttons Section
+            Container(
+              color: AppColors.primaryDark,
+              padding: EdgeInsets.only(
+                left: AppDimensions.paddingLarge,
+                right: AppDimensions.paddingLarge,
+                top: AppDimensions.paddingMedium,
+                bottom: AppDimensions.paddingXLarge,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Use Current Location Button (Outlined)
+                  if (!_isLoading)
+                    OutlinedButton(
+                      onPressed: _requestLocationPermission,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size(
+                          double.infinity,
+                          AppDimensions.buttonHeight,
+                        ),
+                        side: const BorderSide(
+                          color: AppColors.primaryPurple,
+                          width: 2,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.location_on_rounded,
+                            color: AppColors.primaryPurple,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
                           Text(
-                            AppStrings.selectedLocation,
-                            style: const TextStyle(
-                              fontSize: AppDimensions.fontSizeLarge,
+                            'Use Current Location',
+                            style: TextStyle(
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textWhite,
+                              color: AppColors.primaryPurple,
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: AppDimensions.paddingMedium),
-                      Text(
-                        _currentLocation!.displayName,
-                        style: const TextStyle(
-                          fontSize: AppDimensions.fontSizeMedium,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textGrey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: AppDimensions.paddingXLarge),
-              ] else if (_errorMessage != null) ...[
-                Container(
-                  padding: EdgeInsets.all(AppDimensions.paddingLarge),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF7F1D1D).withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.borderRadiusLarge,
                     ),
-                    border: Border.all(
-                      color: const Color(0xFFFCA5A5).withOpacity(0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        color: Color(0xFFDC2626),
-                        size: 24,
-                      ),
-                      SizedBox(width: AppDimensions.paddingMedium),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            fontSize: AppDimensions.fontSizeMedium,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFFDC2626),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: AppDimensions.paddingXLarge),
-              ] else if (_isLoading) ...[
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primaryPurple,
-                  ),
-                ),
-                SizedBox(height: AppDimensions.paddingLarge),
-                const Text(
-                  'Fetching your location...',
-                  style: TextStyle(
-                    fontSize: AppDimensions.fontSizeLarge,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textGrey,
-                  ),
-                ),
-                SizedBox(height: AppDimensions.paddingXLarge),
-              ],
 
-              // Spacer
-              const Spacer(),
+                  SizedBox(height: AppDimensions.paddingMedium),
 
-              // Button
-              if (_currentLocation != null)
-                PrimaryButton(label: 'Continue', onPressed: _continueToNext)
-              else
-                PrimaryButton(
-                  label: AppStrings.allowLocation,
-                  onPressed: _requestLocationPermission,
-                  isLoading: _isLoading,
-                ),
-
-              SizedBox(height: AppDimensions.paddingLarge),
-
-              // Skip for now button
-              if (_currentLocation == null)
-                TextButton(
-                  onPressed: () => widget.onLocationAccessComplete(null),
-                  child: const Text(
-                    'Skip for now',
-                    style: TextStyle(
-                      fontSize: AppDimensions.fontSizeLarge,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textGreySecondary,
-                    ),
+                  // Home Button (Filled)
+                  PrimaryButton(
+                    label: 'Home',
+                    onPressed: () => widget.onLocationAccessComplete(null),
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

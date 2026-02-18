@@ -73,9 +73,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         setState(() {
           _selectedLocation = LocationModel.fromJson(locationJson);
           // If location was previously saved, skip location screen
-          if (!widget.isFirstLaunch) {
-            _locationAccessComplete = true;
-          }
+          _locationAccessComplete = true;
         });
       }
     } catch (e) {
@@ -111,6 +109,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
     });
   }
 
+  void _goBackToLocationScreen() {
+    setState(() {
+      _locationAccessComplete = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // First launch flow: Onboarding -> Location -> Home
@@ -120,14 +124,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
       );
     }
 
-    // Skip location screen if already completed or not first launch
-    if (!_locationAccessComplete && widget.isFirstLaunch) {
+    // Show location screen if not completed
+    if (!_locationAccessComplete) {
       return LocationAccessScreen(
         onLocationAccessComplete: _handleLocationAccessComplete,
       );
     }
 
     // Show home screen with alarm management
-    return HomeScreen(selectedLocation: _selectedLocation);
+    return HomeScreen(
+      selectedLocation: _selectedLocation,
+      onBackPressed: _goBackToLocationScreen,
+    );
   }
 }

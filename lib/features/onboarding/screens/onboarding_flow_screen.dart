@@ -72,7 +72,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       backgroundColor: AppColors.primaryDark,
       body: Column(
         children: [
-          // Scrollable PageView with content
+          // Scrollable PageView with content (takes most of screen)
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -97,9 +97,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           // Fixed bottom section with page indicator and button
           Container(
             color: AppColors.primaryDark,
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingLarge,
-              vertical: AppDimensions.paddingLarge,
+            padding: EdgeInsets.only(
+              left: AppDimensions.paddingLarge,
+              right: AppDimensions.paddingLarge,
+              top: AppDimensions.paddingXLarge,
+              bottom: AppDimensions.paddingXLarge + 16,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -110,7 +112,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                   totalPages: _onboardingData.length,
                 ),
 
-                SizedBox(height: AppDimensions.paddingLarge),
+                SizedBox(height: AppDimensions.paddingXLarge),
 
                 // Next/Get Started Button
                 PrimaryButton(

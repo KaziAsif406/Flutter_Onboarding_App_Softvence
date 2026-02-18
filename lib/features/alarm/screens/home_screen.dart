@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../constants/index.dart';
 import '../../location/models/location_model.dart';
+import '../../location/services/location_service.dart';
 import '../models/alarm_model.dart';
 import '../services/alarm_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final LocationModel? selectedLocation;
+  final VoidCallback? onBackPressed;
 
-  const HomeScreen({super.key, this.selectedLocation});
+  const HomeScreen({super.key, this.selectedLocation, this.onBackPressed});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -17,11 +21,31 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late List<AlarmModel> _alarms = [];
   bool _isLoading = true;
+  bool _isRefreshingLocation = false;
+  LocationModel? _currentLocation;
 
   @override
   void initState() {
     super.initState();
     _loadAlarms();
+    _currentLocation = widget.selectedLocation;
+    _loadSavedLocation();
+  }
+
+  Future<void> _loadSavedLocation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedLocation = prefs.getString('selectedLocation');
+
+      if (savedLocation != null) {
+        final locationJson = jsonDecode(savedLocation) as Map<String, dynamic>;
+        setState(() {
+          _currentLocation = LocationModel.fromJson(locationJson);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading saved location: $e');
+    }
   }
 
   Future<void> _loadAlarms() async {
@@ -143,6 +167,54 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshLocation() async {
+    setState(() => _isRefreshingLocation = true);
+
+    try {
+      // Request location permission
+      final hasPermission = await LocationService.requestLocationPermission();
+
+      if (!hasPermission) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission is required')),
+          );
+        }
+        setState(() => _isRefreshingLocation = false);
+        return;
+      }
+
+      // Fetch current location
+      final newLocation = await LocationService.getCurrentLocation();
+
+      // Save to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'selectedLocation',
+        jsonEncode(newLocation.toJson()),
+      );
+
+      // Update UI
+      setState(() {
+        _currentLocation = newLocation;
+        _isRefreshingLocation = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location updated successfully')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isRefreshingLocation = false);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating location: $e')));
+      }
+    }
+  }
+
   void _showDeleteConfirmation(String alarmId) {
     showDialog(
       context: context,
@@ -254,7 +326,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
-      appBar: AppBar(backgroundColor: AppColors.primaryDark, elevation: 0),
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryDark,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+            color: AppColors.textWhite,
+          ),
+          onPressed: widget.onBackPressed,
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(AppDimensions.paddingLarge),
@@ -295,18 +377,37 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(width: AppDimensions.paddingMedium),
                     Expanded(
                       child: Text(
-                        widget.selectedLocation?.displayName ??
-                            'Add your location',
+                        _currentLocation?.displayName ?? 'Add your location',
                         style: TextStyle(
                           fontSize: AppDimensions.fontSizeMedium,
                           fontWeight: FontWeight.w400,
-                          color: widget.selectedLocation != null
+                          color: _currentLocation != null
                               ? AppColors.textWhite
                               : AppColors.textGreySecondary,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                    ),
+                    SizedBox(width: AppDimensions.paddingMedium),
+                    GestureDetector(
+                      onTap: _isRefreshingLocation ? null : _refreshLocation,
+                      child: _isRefreshingLocation
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primaryPurple,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.refresh_rounded,
+                              color: AppColors.primaryPurple,
+                              size: 20,
+                            ),
                     ),
                   ],
                 ),
