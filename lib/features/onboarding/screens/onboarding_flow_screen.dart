@@ -66,7 +66,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen>
             onSkipPressed: _skipOnboarding,
             backgroundImage: 'assets/images/onboarding2.jpg',
           ),
-          const SizedBox.shrink(),
+          OnboardingScreen3(
+            onNextPressed: _nextPage,
+            onSkipPressed: _skipOnboarding,
+            backgroundImage: 'assets/images/onboarding3.jpg',
+          ),
         ],
       ),
     );

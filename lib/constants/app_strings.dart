@@ -10,10 +10,9 @@ class AppStrings {
       "Using your location, we automatically adjust your alarms to match your environment.";
 
   // Onboarding Screen 3
-  static const String onboarding3Title =
-      "See the beauty, one journey at a time.";
+  static const String onboarding3Title = "Relax. Unwind. Recharge.";
   static const String onboarding3Description =
-      "Travel made simple and exciting—discover places you'll love and moments you'll never forget.";
+      "End your day peacefully with gentle reminders designed for calm and balance.";
 
   // Button Labels
   static const String skip = "Skip";

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import '../../../constants/index.dart';
 import '../../../commmon_widgets/index.dart';
 
-class OnboardingScreen2 extends StatelessWidget {
+class OnboardingScreen3 extends StatelessWidget {
   final VoidCallback onNextPressed;
   final VoidCallback onSkipPressed;
   final String backgroundImage;
 
-  const OnboardingScreen2({
+  const OnboardingScreen3({
     super.key,
     required this.onNextPressed,
     required this.onSkipPressed,
-    this.backgroundImage = 'assets/images/onboarding2.jpg',
+    this.backgroundImage = 'assets/images/onboarding3.jpg',
   });
 
   @override
@@ -40,6 +40,7 @@ class OnboardingScreen2 extends StatelessWidget {
                   backgroundImage,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
+                    // Fallback gradient if image not found
                     return Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -47,7 +48,7 @@ class OnboardingScreen2 extends StatelessWidget {
                           end: Alignment.bottomRight,
                           colors: [
                             AppColors.primaryDark,
-                            const Color(0xFF164E63),
+                            const Color(0xFF0C4A6E),
                           ],
                         ),
                       ),
@@ -87,7 +88,7 @@ class OnboardingScreen2 extends StatelessWidget {
                   children: [
                     // Title
                     Text(
-                      AppStrings.onboarding2Title,
+                      AppStrings.onboarding3Title,
                       style: TextStyle(
                         fontSize: isMobile
                             ? AppDimensions.fontSizeXXLarge
@@ -102,7 +103,7 @@ class OnboardingScreen2 extends StatelessWidget {
 
                     // Description
                     Text(
-                      AppStrings.onboarding2Description,
+                      AppStrings.onboarding3Description,
                       style: TextStyle(
                         fontSize: AppDimensions.fontSizeLarge,
                         fontWeight: FontWeight.w400,
@@ -114,13 +115,13 @@ class OnboardingScreen2 extends StatelessWidget {
                     SizedBox(height: AppDimensions.paddingXLarge),
 
                     // Page Indicator
-                    PageIndicator(currentPage: 1, totalPages: 3),
+                    PageIndicator(currentPage: 2, totalPages: 3),
 
                     SizedBox(height: AppDimensions.paddingLarge),
 
-                    // Next Button
+                    // Next Button (Changes to Get Started on last screen)
                     PrimaryButton(
-                      label: AppStrings.next,
+                      label: AppStrings.getStarted,
                       onPressed: onNextPressed,
                     ),
                   ],
