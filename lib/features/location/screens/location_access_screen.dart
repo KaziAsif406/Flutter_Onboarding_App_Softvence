@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../constants/index.dart';
 import '../../../commmon_widgets/index.dart';
 import '../models/location_model.dart';
@@ -65,6 +67,11 @@ class _LocationAccessScreenState extends State<LocationAccessScreen> {
 
       // Get current location
       final location = await LocationService.getCurrentLocation();
+
+      // Save location to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selectedLocation', jsonEncode(location.toJson()));
+      await prefs.setBool('locationPermissionGranted', true);
 
       setState(() {
         _currentLocation = location;
