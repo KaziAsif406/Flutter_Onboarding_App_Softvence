@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'constants/index.dart';
 import 'features/onboarding/index.dart';
 import 'features/location/index.dart';
+import 'features/alarm/index.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +39,7 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   bool _onboardingComplete = false;
   bool _locationAccessComplete = false;
+  LocationModel? _selectedLocation;
 
   void _handleOnboardingComplete() {
     setState(() {
@@ -65,10 +67,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       );
     }
 
-    // TODO: Implement home screen after location access
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home'), elevation: 0),
-      body: const Center(child: Text('App Setup Complete!')),
-    );
+    // Show home screen with alarm management
+    return HomeScreen(selectedLocation: _selectedLocation);
   }
 }
